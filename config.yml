@@ -1,0 +1,2 @@
+app-image: sunakan/asciidoctor
+docker-base-image: ruby:2.7-slim
