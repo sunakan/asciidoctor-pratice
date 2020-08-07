@@ -27,6 +27,18 @@ build: ## asciidoctorイメージのビルド
 		--build-arg DOCKER_BASE_IMAGE=$(DOCKER_BASE_IMAGE) \
 		--tag $(APP_IMAGE)
 
+.PHONY: bash
+bash: ## asciidoctorコマンドが走る
+	docker run \
+		--rm \
+		--interactive \
+		--tty \
+		--user `id -u`:`id -g` \
+		--mount type=bind,source=$(PWD)/docs/,target=/var/local/docs/ \
+		--env TZ=Aisa/Tokyo \
+		--entrypoint '' \
+		$(APP_IMAGE) bash
+
 .PHONY: doc
 doc: ## asciidoctorコマンドが走る
 	docker run \
@@ -35,7 +47,32 @@ doc: ## asciidoctorコマンドが走る
 		--tty \
 		--user `id -u`:`id -g` \
 		--mount type=bind,source=$(PWD)/docs/,target=/var/local/docs/ \
-		$(APP_IMAGE) --out-file /var/local/docs/html/index.html /var/local/docs/README.adoc
+		--env TZ=Aisa/Tokyo \
+		--entrypoint '' \
+		$(APP_IMAGE) asciidoctor-pdf \
+			--require asciidoctor-pdf-cjk \
+			--require asciidoctor-diagram \
+			--attribute scripts=cjk \
+			--attribute pdf-type=default-with-fallback-font-theme.yml \
+			/var/local/docs/README.adoc
+
+#		htakeuchi/docker-asciidoctor-jp asciidoctor \
+#			--require asciidoctor-pdf-cjk \
+#			--require asciidoctor-diagram \
+#			--out-file /var/local/docs/html/index.html \
+#			/var/local/docs/README.adoc
+
+#		uochan/docker-asciidoctor-jp asciidoctor \
+#			-a source-highlighter=highlightjs -a stylesheet=/stylesheets/github.css \
+#			--require asciidoctor-diagram \
+#			--out-file /var/local/docs/html/index.html \
+#			/var/local/docs/README.adoc
+
+#		$(APP_IMAGE) \
+#			--require asciidoctor-pdf-cjk \
+#			--require asciidoctor-diagram \
+#			--out-file /var/local/docs/html/index.html \
+#			/var/local/docs/README.adoc
 
 .PHONY: nginx
 nginx: ## asciidoctorで出力したHTMLを閲覧するためのコンテナを立てる
